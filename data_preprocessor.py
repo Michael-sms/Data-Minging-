@@ -34,14 +34,17 @@ def inspect_dataset(X, y, title="Dataset Check"):
     print(f"数据形状 (样本数, 窗口长度, 特征数): {X.shape}")
     print(f"标签分布 (0为正常, 1为故障): {np.bincount(y.astype(int))}")
 
-    # 随机抽取一个样本的一个特征进行波形可视化
+    # 随机抽取一个样本的一个特征进行波形可视化并保存
     sample_idx = np.random.randint(0, len(X))
-    plt.figure(figsize=(10, 3))
+    plt.figure(figsize=(12, 4))
     plt.plot(X[sample_idx, :, 0])  # 绘制第一个传感器特征
     plt.title(f"{title} - Sample {sample_idx} Waveform")
     plt.xlabel("Time steps")
     plt.ylabel("Standardized Value")
     plt.show()
+    # 保存到image_results文件夹
+    plt.savefig(f'image_results/{title}_Sample{sample_idx}_Waveform.png')
+
 
 
 # --- 主逻辑保持原有命名 run_pipeline ---
