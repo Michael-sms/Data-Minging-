@@ -2,87 +2,79 @@ import scipy.io as sio
 import pandas as pd
 import numpy as np
 import os
+import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
 
 
 def load_mat_to_df(file_path):
-    """
-    自适应读取mat文件，自动识别数据矩阵键名
-    """
+    """自适应读取mat文件"""
     mat_data = sio.loadmat(file_path)
-    # 过滤掉mat文件自带的元数据键（以__开头）
     data_keys = [k for k in mat_data.keys() if not k.startswith('__')]
-
-    # 通常CMFF数据存储在最大的矩阵中
     main_key = max(data_keys, key=lambda k: mat_data[k].size)
     raw_data = mat_data[main_key]
-
-    # 转换为DataFrame
-    df = pd.DataFrame(raw_data)
-    # 假设CMFF数据集典型的24-26个过程变量
-    return df
+    return pd.DataFrame(raw_data)
 
 
-def preprocess_cmff_dataset(normal_path, fault_paths, window_size=100, step=50):
-    """
-    完整预处理流程：加载 -> 筛选 -> 归一化 -> 标注 -> 窗口化
-    """
-    # 1. 加载数据
+def sliding_window(data, labels, size, s):
+    """滑动窗口切片"""
+    X, Y = [], []
+    for i in range(0, len(data) - size, s):
+        X.append(data[i: i + size])
+        Y.append(1 if np.any(labels[i: i + size] == 1) else 0)
+    return np.array(X), np.array(Y)
+
+
+# --- 主逻辑保持 run_pipeline ---
+def run_pipeline():
+    # 1. 配置路径
+    normal_file = 'MultiphaseFlowFacilitydataset/CVACaseStudy/Training.mat'
+    fault_files = [f'MultiphaseFlowFacilitydataset/CVACaseStudy/FaultyCase{i}.mat' for i in range(1, 7)]
+
+    # 2.加载与标注
     print("正在加载数据...")
-    df_normal = load_mat_to_df(normal_path)
+    df_normal = load_mat_to_df(normal_file)
     df_normal['label'] = 0
 
-    fault_list = []
-    for f_path in fault_paths:
-        df_f = load_mat_to_df(f_path)
-        # 这里进行单标签标注：所有故障文件数据均设为 1
-        df_f['label'] = 1
-        fault_list.append(df_f)
-
+    fault_list = [load_mat_to_df(f) for f in fault_files]
+    for df in fault_list: df['label'] = 1
     df_all_fault = pd.concat(fault_list, axis=0)
 
-    # 2. 信号筛选 (Feature Selection)
-    # 剔除方差极小（接近0）的传感器，这些通常是死掉的传感器或固定设定值
+    # 3. 筛选与归一化
     features = df_normal.columns[:-1]
     variances = df_normal[features].var()
     selected_features = variances[variances > 1e-6].index
-    print(f"原变量数: {len(features)}, 筛选后保留变量数: {len(selected_features)}")
 
-    # 3. 归一化 (Standardization)
-    # 仅使用正常数据拟合，防止测试数据信息泄露
     scaler = StandardScaler()
-    train_data_scaled = scaler.fit_transform(df_normal[selected_features])
-    fault_data_scaled = scaler.transform(df_all_fault[selected_features])
+    train_scaled = scaler.fit_transform(df_normal[selected_features])
+    fault_scaled = scaler.transform(df_all_fault[selected_features])
 
-    # 4. 滑动窗口切片 (Sliding Window)
-    def sliding_window(data, labels, size, s):
-        X, Y = [], []
-        for i in range(0, len(data) - size, s):
-            X.append(data[i: i + size])
-            # 窗口内只要有1个点是故障，则该窗口标为1
-            Y.append(1 if np.any(labels[i: i + size] == 1) else 0)
-        return np.array(X), np.array(Y)
+    # 4. 滑动窗口
+    window_size, step = 60, 20
+    X_normal_win, y_normal_win = sliding_window(train_scaled, df_normal['label'].values, window_size, step)
+    X_fault_win, y_fault_win = sliding_window(fault_scaled, df_all_fault['label'].values, window_size, step)
 
-    print("正在进行滑动窗口切片...")
-    X_train, y_train = sliding_window(train_data_scaled, df_normal['label'].values, window_size, step)
-    X_test_fault, y_test_fault = sliding_window(fault_data_scaled, df_all_fault['label'].values, window_size, step)
-
-    return X_train, y_train, X_test_fault, y_test_fault, selected_features
+    # 5. 数据集划分 (80%正常用于训练，20%正常+全部故障用于测试)
+    X_train, X_test_normal, y_train, y_test_normal = train_test_split(
+        X_normal_win, y_normal_win, test_size=0.2, random_state=42
+    )
+    X_test = np.concatenate([X_test_normal, X_fault_win], axis=0)
+    y_test = np.concatenate([y_test_normal, y_fault_win], axis=0)
 
 
-# --- 执行预处理 ---
-# 确保文件名与您上传的一致
-normal_file = 'MultiphaseFlowFacilitydataset/CVACaseStudy/Training.mat'
-fault_files = [f'MultiphaseFlowFacilitydataset/CVACaseStudy/FaultyCase{i}.mat' for i in range(1, 7)]
+    # 6. 保存数据文件
+    save_dir = 'processed_data'
+    if not os.path.exists(save_dir): os.makedirs(save_dir)
+    np.save(os.path.join(save_dir, 'train_X.npy'), X_train)
+    np.save(os.path.join(save_dir, 'train_y.npy'), y_train)
+    np.save(os.path.join(save_dir, 'test_X.npy'), X_test)
+    np.save(os.path.join(save_dir, 'test_y.npy'), y_test)
+    # 特别注意：需要保存特征名，否则评估脚本不知道热力图的坐标轴叫什么
+    np.save(os.path.join(save_dir, 'selected_features.npy'), selected_features.values)
 
-X_train, y_train, X_test_f, y_test_f, feat_names = preprocess_cmff_dataset(
-    normal_file, fault_files, window_size=60, step=20
-)
+    print(f"数据生产完毕，已存入 {save_dir} 文件夹。")
 
-print(f"最终训练集形状 (Samples, Window, Features): {X_train.shape}")
-print(f"最终故障测试集形状: {X_test_f.shape}")
 
-# 保存预处理后的数据(保存到preprocessed_data文件夹下)
-if not os.path.exists('preprocessed_data'):
-    os.makedirs('preprocessed_data')
-np.savez_compressed('preprocessed_data/cmff_data.npz', X_train=X_train, y_train=y_train, X_test_f=X_test_f, y_test_f=y_test_f, feat_names=feat_names)
+if __name__ == "__main__":
+    run_pipeline()
