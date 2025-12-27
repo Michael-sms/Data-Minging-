@@ -1,0 +1,11 @@
+--- Isolation Forest 基准模型性能报告 ---
+使用参数: n_estimators=100, contamination=0.1, threshold=0.00 (default)
+
+              precision    recall  f1-score   support
+
+           0       0.29      0.92      0.44       132
+           1       0.99      0.88      0.93      2418
+
+    accuracy                           0.88      2550
+   macro avg       0.64      0.90      0.69      2550
+weighted avg       0.96      0.88      0.91      2550
