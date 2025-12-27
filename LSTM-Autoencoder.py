@@ -135,16 +135,6 @@ def train_and_evaluate():
     print("\n=== 最终分类报告 ===")
     print(classification_report(y_test, y_pred, target_names=['Normal', 'Fault']))
 
-    # 绘制误差分布图
-    plt.figure(figsize=(10, 6))
-    sns.histplot(train_losses, color='blue', label='Train (Normal)', kde=True, stat="density", alpha=0.5)
-    sns.histplot(test_losses[y_test == 1], color='red', label='Test (Fault)', kde=True, stat="density", alpha=0.5)
-    plt.axvline(threshold, color='green', linestyle='--', label='Threshold')
-    plt.title("Reconstruction Error Distribution")
-    plt.legend()
-    plt.savefig('anomaly_detection_result.png')
-    print("误差分布图已保存至 anomaly_detection_result.png")
-
 
 if __name__ == "__main__":
     train_and_evaluate()

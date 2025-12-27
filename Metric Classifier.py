@@ -59,7 +59,6 @@ class AdaptiveExperiment:
             train_dists = torch.norm(z_train, p=2, dim=1).cpu().numpy()
 
             # 动态阈值优化：取训练集分布的 90 分位数作为更严谨的边界
-            # 在学术上，这被称为 Sensitivity-Specific Trade-off
             threshold = np.percentile(train_dists, 90)
             y_pred = (dists > threshold).astype(int)
 
