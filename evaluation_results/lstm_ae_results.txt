@@ -1,0 +1,5 @@
+LSTM-AE Unsupervised Anomaly Detection
+Threshold (95%): 0.841437
+Accuracy : 0.9882
+Precision: 0.9971
+Recall   : 0.9905
