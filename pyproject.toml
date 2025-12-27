@@ -13,4 +13,5 @@ dependencies = [
     "tensorflow>=2.20.0",
     "seaborn>=0.13.2",
     "torch>=2.9.1",
+    "mlxtend>=0.24.0",
 ]
