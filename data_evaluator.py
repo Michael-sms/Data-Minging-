@@ -45,7 +45,7 @@ def plot_correlation_heatmap(df, feature_names, save_dir='image_results'):
     print(f"相关性热力图已保存至: {save_path}")
 
 
-def evaluate_processed_data(X_train, y_train, X_test, y_test, save_dir='processed_data'):
+def evaluate_processed_data(X_train, y_train, X_test, y_test, save_dir='evaluation_results'):
     """
     数据评估脚本：分析处理后数据的质量并记录
     """
