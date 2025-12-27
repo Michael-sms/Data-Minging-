@@ -73,9 +73,9 @@ class AdaptiveExperiment:
 
 # --- 3. Run ---
 if __name__ == "__main__":
-    X_train = np.load('processed_data/train_X.npy')
-    X_test = np.load('processed_data/test_X.npy')
-    y_test = np.load('processed_data/test_y.npy')
+    X_train = np.load('../processed_data/train_X.npy')
+    X_test = np.load('../processed_data/test_X.npy')
+    y_test = np.load('../processed_data/test_y.npy')
 
     exp = AdaptiveExperiment(X_train.shape[2])
     exp.run_training(X_train)

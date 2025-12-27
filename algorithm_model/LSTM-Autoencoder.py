@@ -48,7 +48,7 @@ class LSTM_Autoencoder(nn.Module):
 
 
 # --- 2. 加载数据 ---
-def load_data(data_dir='processed_data'):
+def load_data(data_dir='../processed_data'):
     print("正在加载数据...")
     X_train = np.load(f'{data_dir}/train_X.npy').astype(np.float32)
     # y_train 在训练中不需要，因为是无监督/自监督训练
