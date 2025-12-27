@@ -6,9 +6,9 @@ from torch.utils.data import DataLoader, TensorDataset
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, precision_score, recall_score
 
-DATA_DIR = "processed_data"
-IMAGE_DIR = "image_results"
-EVAL_DIR = "evaluation_results"
+DATA_DIR = "../processed_data"
+IMAGE_DIR = "../image_results"
+EVAL_DIR = "../evaluation_results"
 
 os.makedirs(IMAGE_DIR, exist_ok=True)
 os.makedirs(EVAL_DIR, exist_ok=True)

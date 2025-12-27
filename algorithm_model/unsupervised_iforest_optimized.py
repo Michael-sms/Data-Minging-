@@ -5,9 +5,9 @@ from sklearn.ensemble import IsolationForest
 from sklearn.metrics import classification_report, precision_recall_curve, f1_score
 
 # 1. 加载数据
-train_X = np.load('processed_data/train_X.npy')
-test_X = np.load('processed_data/test_X.npy')
-test_y = np.load('processed_data/test_y.npy')
+train_X = np.load('../processed_data/train_X.npy')
+test_X = np.load('../processed_data/test_X.npy')
+test_y = np.load('../processed_data/test_y.npy')
 
 # 2. 拍扁数据 (Flatten)
 X_train_flat = train_X.reshape(train_X.shape[0], -1)
@@ -44,7 +44,7 @@ fp_count = len(false_positives_indices)
 print(f"\n[深度分析] 误判样本数 (正常判为异常): {fp_count}")
 
 # 自动保存优化后的评估报告到 evaluation_results
-report_file = 'evaluation_results/iforest_optimized_report.txt'
+report_file = '../evaluation_results/iforest_optimized_report.txt'
 with open(report_file, 'w', encoding='utf-8') as f:
     f.write("--- 孤立森林优化后性能报告 (基于PR曲线寻优) ---\n")
     f.write(f"搜索到的最佳阈值: {best_threshold:.4f}\n")
@@ -66,7 +66,7 @@ plt.ylabel('Frequency')
 plt.legend()
 
 # 自动保存优化后的分布图到 image_results
-image_file = 'image_results/iforest_optimized_distribution.png'
+image_file = '../image_results/iforest_optimized_distribution.png'
 plt.savefig(image_file, dpi=300, bbox_inches='tight')
 print(f"优化版分布图已保存至: {image_file}")
 
